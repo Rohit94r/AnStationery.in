@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { login, DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD } from "@/lib/auth";
+import { adminLogin, DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD } from "@/lib/auth";
 
 const Schema = z.object({
   email: z.string().email(),
@@ -17,17 +17,22 @@ export async function POST(request: Request) {
 
   const parsed = Schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Enter a valid email and password" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Enter a valid email and password" },
+      { status: 400 },
+    );
   }
 
-  const ok = await login(parsed.data.email, parsed.data.password);
+  const ok = await adminLogin(parsed.data.email, parsed.data.password);
   if (!ok) {
-    return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Invalid email or password" },
+      { status: 401 },
+    );
   }
   return NextResponse.json({ ok: true });
 }
 
-// Demo helper: expose default credentials only in dev so the login page can hint
 export function GET() {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({ demo: false });

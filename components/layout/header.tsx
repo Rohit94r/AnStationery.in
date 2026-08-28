@@ -86,7 +86,7 @@ export function Header() {
             <Search className="h-5 w-5" />
           </button>
           <Link
-            href="/about"
+            href="/login"
             className="hidden h-10 w-10 place-items-center rounded-full hover:bg-cream sm:grid"
             aria-label="Account"
           >

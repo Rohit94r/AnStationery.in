@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { adminDeleteCategory, adminUpdateCategory } from "@/lib/data";
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getSession();
+  const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   const body = await request.json().catch(() => ({}));
@@ -24,7 +24,7 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getSession();
+  const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   await adminDeleteCategory(id);

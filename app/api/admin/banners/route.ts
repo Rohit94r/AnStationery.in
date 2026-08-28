@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { adminCreateBanner, adminGetBanners } from "@/lib/data";
 
 const Schema = z.object({
@@ -15,14 +15,14 @@ const Schema = z.object({
 });
 
 export async function GET() {
-  const session = await getSession();
+  const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const banners = await adminGetBanners();
   return NextResponse.json({ banners });
 }
 
 export async function POST(request: Request) {
-  const session = await getSession();
+  const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await request.json().catch(() => null);
   const parsed = Schema.safeParse(body);

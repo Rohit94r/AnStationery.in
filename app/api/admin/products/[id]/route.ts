@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import {
   adminGetProductById,
   adminReplaceImages,
@@ -29,7 +29,7 @@ const UpdateSchema = z.object({
 });
 
 async function checkAuth() {
-  const session = await getSession();
+  const session = await getAdminSession();
   if (!session) return null;
   return session;
 }

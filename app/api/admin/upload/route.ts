@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -8,7 +8,7 @@ const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request: Request) {
-  const session = await getSession();
+  const session = await getAdminSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
