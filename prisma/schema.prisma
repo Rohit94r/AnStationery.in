@@ -1,0 +1,171 @@
+// Prisma schema for Crayon2Couture
+// Local demo: SQLite (works instantly, no external credentials).
+// Production: switch provider to "postgresql" + set DATABASE_URL to Supabase.
+//   (String-based enum fields remain valid in Postgres too.)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// String "enums" — allowed values documented in lib/constants.ts
+// OrderStatus: NEW | CONFIRMED | PROCESSING | SHIPPED | DELIVERED | CANCELLED
+// ShipmentStatus: PENDING | SHIPPED | DELIVERED
+// Badge: NEW | SALE | HOT | TRENDING | BESTSELLER | SOLD_OUT
+// BannerVariant: yellow | cream | photo | pastel
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  emoji       String?
+  image       String?
+  description String?
+  accent      String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id             String         @id @default(cuid())
+  name           String
+  slug           String         @unique
+  description    String
+  price          Int
+  originalPrice  Int?
+  stock          Int            @default(0)
+  sku            String?
+  badge          String?
+  isActive       Boolean        @default(true)
+  isFeatured     Boolean        @default(false)
+  isTrending     Boolean        @default(false)
+  isNew          Boolean        @default(false)
+  isBestSeller   Boolean        @default(false)
+  rating         Float          @default(0)
+  reviewCount    Int            @default(0)
+  // soft delete to preserve historical orders
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  category       Category?      @relation(fields: [categoryId], references: [id])
+  categoryId     String?
+  images         ProductImage[]
+  orderItems     OrderItem[]
+
+  @@index([categoryId])
+  @@index([isTrending])
+  @@index([isNew])
+  @@index([isBestSeller])
+  @@index([isFeatured])
+}
+
+model ProductImage {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url        String
+  alt        String?
+  sortOrder  Int      @default(0)
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([productId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  address         String
+  city            String
+  state           String
+  pincode         String
+  subtotal        Int
+  shippingAmount  Int
+  totalAmount     Int
+  status          String      @default("NEW")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+  shipment        Shipment?
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id                  String    @id @default(cuid())
+  orderId             String
+  order               Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId           String?
+  product             Product?  @relation(fields: [productId], references: [id])
+  // snapshots keep historical orders accurate even if product is edited/deleted
+  productNameSnapshot String
+  priceSnapshot       Int
+  quantity            Int
+  subtotal            Int
+
+  @@index([orderId])
+}
+
+model Shipment {
+  id             String   @id @default(cuid())
+  orderId        String   @unique
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  courierName    String?
+  trackingNumber String?
+  trackingUrl    String?
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Banner {
+  id         String   @id @default(cuid())
+  title      String
+  subtitle   String?
+  imageUrl   String?
+  buttonText String?
+  buttonUrl  String?
+  variant    String   @default("yellow")
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  name       String
+  city       String?
+  rating     Int      @default(5)
+  text       String
+  product    String?
+  productId  String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+// Single source of truth for business configuration
+model SiteConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
